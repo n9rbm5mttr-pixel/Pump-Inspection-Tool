@@ -1,0 +1,13 @@
+{
+  "name": "Pump Inspection Report",
+  "short_name": "Pump Inspection",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E9EDF0",
+  "theme_color": "#0F5E8C",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
