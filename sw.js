@@ -1,7 +1,7 @@
 /* Pump inspection tool - offline support.
    Bump CACHE_NAME any time you upload a new index.html so every device
    picks up the change instead of being stuck on an old cached copy. */
-var CACHE_NAME = 'pump-inspection-v1';
+var CACHE_NAME = 'pump-inspection-v2';
 
 var CORE_ASSETS = [
   './',
