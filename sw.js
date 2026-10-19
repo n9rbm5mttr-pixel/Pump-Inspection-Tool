@@ -1,11 +1,11 @@
 /* Pump inspection tool - offline support.
-   Bump CACHE_NAME any time you upload a new index.html so every device
+   Bump CACHE_NAME any time you upload a new inspection.html so every device
    picks up the change instead of being stuck on an old cached copy. */
-var CACHE_NAME = 'pump-inspection-v2';
+var CACHE_NAME = 'pump-inspection-v4';
 
 var CORE_ASSETS = [
   './',
-  './index.html',
+  './inspection.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png',
@@ -45,7 +45,7 @@ self.addEventListener('fetch', function(event){
       return response;
     }).catch(function(){
       return caches.match(event.request).then(function(cached){
-        return cached || caches.match('./index.html');
+        return cached || caches.match('./inspection.html');
       });
     })
   );
