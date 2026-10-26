@@ -240,15 +240,6 @@ tr.clmore[data-hasact="0"] .act-only{display:none}
 .lead{margin:0 0 14px;font-size:17px}
 .alert{margin:14px 0 0;padding:12px 14px;border-radius:6px;background:var(--poor-t);border:1px solid var(--poor);color:var(--ink)}
 .alert button{margin:4px 6px 0 0;min-height:32px;padding:0 10px;border:1px solid var(--poor);background:var(--surface);border-radius:5px;cursor:pointer;font-weight:500}
-.srows{margin-top:18px;border-top:1px solid var(--line)}
-.srow{display:grid;grid-template-columns:minmax(150px,220px) 116px minmax(0,1fr);gap:8px 18px;padding:14px 0 14px 12px;border-bottom:1px solid var(--line);border-left:5px solid var(--line-strong)}
-.srow[data-cond=good]{border-left-color:var(--good)}.srow[data-cond=fair]{border-left-color:var(--fair)}
-.srow[data-cond=poor]{border-left-color:var(--poor)}.srow[data-cond=failed]{border-left-color:var(--failed)}
-.srow .nm{font-weight:600}.srow .nm small{display:block;font-weight:400;color:var(--muted)}
-.srow p{margin:0 0 6px;white-space:pre-wrap}
-.srow ul{margin:0 0 6px;padding-left:18px}
-.srow .sact{font-weight:600;color:var(--accent-strong)}
-.srow .warn{color:var(--poor);font-weight:600}
 .muted{color:var(--muted)}
 .empty{margin:14px 0 0;padding:18px;border:1px dashed var(--line-strong);border-radius:6px;color:var(--muted)}
 .rgrp{margin-top:20px}
@@ -280,7 +271,6 @@ tr.clmore[data-hasact="0"] .act-only{display:none}
   .card-b{grid-template-columns:1fr}
   .actsec{margin-right:0}
   .two{grid-template-columns:1fr}
-  .srow{grid-template-columns:1fr;gap:6px}
 }
 @media (max-width:640px){
   main{padding:4px 14px 80px}
@@ -453,7 +443,7 @@ tr.clmore[data-hasact="0"] .act-only{display:none}
 
   <section class="sec" id="sec-summary">
     <h2>Inspection summary</h2>
-    <p class="sub">Builds itself from the components above. Untick “Show in inspection summary” on a component to leave it out.</p>
+    <p class="sub">A condition breakdown of the components above, plus your overall write-up.</p>
     <div class="panel">
       <p class="lead" id="lead"></p>
       <div class="tally" id="tally" role="img" aria-label="Condition breakdown"></div>
@@ -464,7 +454,6 @@ tr.clmore[data-hasact="0"] .act-only{display:none}
           <select id="sum-overall" data-bind="summary.overall"><option value="">Not set</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option><option value="failed">Failed</option></select></div>
         <div class="f full"><label for="sum-narr">Overall findings</label><textarea id="sum-narr" rows="4" data-bind="summary.narrative" placeholder="Your overall read on the unit, root cause if known, anything the component list doesn’t capture."></textarea></div>
       </div>
-      <div class="srows" id="srows"></div>
     </div>
   </section>
 
@@ -819,14 +808,14 @@ function normComp(c){
     photosBuilt:(Array.isArray(c.photosBuilt)?c.photosBuilt:[]).map(normPhoto).filter(function(ph){return ph.data}),
     action:c.action||'',priority:c.priority||'recommended',actionNotes:c.actionNotes||'',actionMemo:c.actionMemo||'',
     actionBuilt:c.actionBuilt||'',actionMemoBuilt:c.actionMemoBuilt||'',
-    inSummary:c.inSummary!==false,inRecs:c.inRecs!==false,open:c.open!==false};
+    inRecs:c.inRecs!==false,open:c.open!==false};
 }
 function normClearance(cl){
   cl=cl||{};
   return{id:cl.id||uid(),label:cl.label||'',aComp:cl.aComp||'',aDim:cl.aDim||'',bComp:cl.bComp||'',bDim:cl.bDim||'',
     min:cl.min||'',max:cl.max||'',unit:cl.unit||'in',notes:cl.notes||'',
     action:cl.action||'',priority:cl.priority||'recommended',actionNotes:cl.actionNotes||'',actionMemo:cl.actionMemo||'',
-    inSummary:cl.inSummary===true,inRecs:cl.inRecs!==false,open:cl.open!==false};
+    inRecs:cl.inRecs!==false,open:cl.open!==false};
 }
 function merge(data){
   var f=fresh();
@@ -1123,7 +1112,6 @@ function cardHTML(c){
       '<div class="f act-only"><label for="p-'+id+'">Priority</label><select id="p-'+id+'" data-c="'+id+'" data-f="priority">'+PRIS.map(function(a){return '<option value="'+a[0]+'"'+(c.priority===a[0]?' selected':'')+'>'+a[1]+'</option>'}).join('')+'</select></div>'+
       '<div class="f act-only"><label for="an-'+id+'">What should be done</label><textarea id="an-'+id+'" rows="3" data-c="'+id+'" data-f="actionNotes" placeholder="Scope of work, parts, machining, reason">'+esc(c.actionNotes)+'</textarea></div>'+
       '<div class="f"><label for="am-'+id+'">Notes</label><textarea id="am-'+id+'" rows="3" data-c="'+id+'" data-f="actionMemo" placeholder="Anything else about this component \u2014 even if no action was needed">'+esc(c.actionMemo)+'</textarea></div>'+
-      '<label class="chk"><input type="checkbox" data-c="'+id+'" data-f="inSummary"'+(c.inSummary?' checked':'')+'><span>Show in inspection summary</span></label>'+
       '<label class="chk act-only"><input type="checkbox" data-c="'+id+'" data-f="inRecs"'+(c.inRecs?' checked':'')+'><span>Add to recommendations</span></label>'+
       '<div class="phase-block"><h4>Action (As Built)</h4>'+
         '<div class="f"><label for="ab-'+id+'">Action</label><select id="ab-'+id+'" data-c="'+id+'" data-f="actionBuilt">'+ACTIONS_BUILT.map(function(a){return '<option value="'+a[0]+'"'+(c.actionBuilt===a[0]?' selected':'')+'>'+a[1]+'</option>'}).join('')+'</select></div>'+
@@ -1231,7 +1219,6 @@ function clHTML(cl){
         '<div class="f full act-only"><label>Notes</label><textarea rows="2" data-cl="'+id+'" data-f="actionMemo" placeholder="Anything else about this action">'+esc(cl.actionMemo)+'</textarea></div>'+
         '<div class="f full"><label>Context for this reading</label><textarea rows="2" data-cl="'+id+'" data-f="notes" placeholder="Anything about the reading itself">'+esc(cl.notes)+'</textarea></div>'+
       '</div>'+
-      '<label class="chk"><input type="checkbox" data-cl="'+id+'" data-f="inSummary"'+(cl.inSummary?' checked':'')+'><span>Show in inspection summary</span></label>'+
       '<label class="chk act-only"><input type="checkbox" data-cl="'+id+'" data-f="inRecs"'+(cl.inRecs?' checked':'')+'><span>Add to recommendations</span></label>'+
     '</td>'+
   '</tr>';
@@ -1367,38 +1354,6 @@ function renderSummary(){
   if(need.length)alertsHTML+='<div class="alert" role="status"><strong>Poor or failed with no action selected:</strong><br>'+need.map(function(c){return '<button type="button" data-goto="'+c.id+'">'+esc(dn(c))+'</button>'}).join('')+'</div>';
   if(clNeed.length)alertsHTML+='<div class="alert" role="status"><strong>Clearance checks out of tolerance with no action selected:</strong><br>'+clNeed.map(function(cl){return '<button type="button" data-gotoclear="'+cl.id+'">'+esc(dn(Object.assign({__clear:true},cl)))+'</button>'}).join('')+'</div>';
   $('#alerts').innerHTML=alertsHTML;
-  var rows=comps.filter(function(c){return c.inSummary});
-  var rowsHTML=rows.map(function(c){
-    var flagged=c.dims.filter(function(d){return d.flag||dimInRange(d)===false});
-    var act='';
-    if(c.action==='none')act='<p class="muted">No action needed.</p>';
-    else if(c.action)act='<p class="sact">Action: '+esc(AL[c.action])+', '+esc(PL[c.priority].toLowerCase())+'</p>';
-    else if(c.condition==='poor'||c.condition==='failed')act='<p class="warn">No action selected yet.</p>';
-    return '<div class="srow" data-cond="'+(c.condition||'unset')+'">'+
-      '<div class="nm">'+esc(c.name)+(c.label?'<small>'+esc(c.label)+'</small>':'')+'</div>'+
-      '<div><span class="pill" data-v="'+(c.condition||'')+'">'+esc(CL[c.condition||'unset'])+'</span></div>'+
-      '<div>'+(c.notes.trim()?'<p>'+esc(c.notes.trim())+'</p>':'<p class="muted">No findings recorded.</p>')+
-      (flagged.length?'<ul>'+flagged.map(function(d){var v=d.specMin||d.specMax?'':varText(d);return '<li>Out of spec: '+esc(d.p||'measurement')+' '+esc(d.found||'–')+' '+esc(d.unit)+' (spec '+esc(specText(d)||'–')+(v&&v!=='–'?', var. '+v:'')+')</li>'}).join('')+'</ul>':'')+
-      act+'</div></div>';
-  }).join('');
-  var clRows=S.clearances.filter(function(cl){return cl.inSummary});
-  var clRowsHTML=clRows.map(function(cl){
-    var cc=computeClearance(cl),meta=statusMeta(cc.status);
-    var aComp2=getC(cl.aComp),bComp2=getC(cl.bComp);
-    var aLabel2=aComp2?(dn(aComp2)+(cc.a?' \u2014 '+(cc.a.p||'measurement'):'')):'Measurement A not set';
-    var bLabel2=bComp2?(dn(bComp2)+(cc.b?' \u2014 '+(cc.b.p||'measurement'):'')):'Measurement B not set';
-    var calc=cc.status==='incomplete'?'Incomplete — measurements not fully selected.':('Result'+(S.phase==='built'?' (as built)':'')+': '+aLabel2+' \u2212 '+bLabel2+' = '+((cc.value>0?'+':cc.value<0?'':'')+cc.value)+(cl.unit?' '+cl.unit:'')+((cl.min!==''||cl.max!=='')?' (spec '+(cl.min!==''?cl.min:'–')+' to '+(cl.max!==''?cl.max:'–')+(cl.unit?' '+cl.unit:'')+')':''));
-    var act='';
-    if(cl.action==='none')act='<p class="muted">No action needed.</p>';
-    else if(cl.action)act='<p class="sact">Action: '+esc(AL[cl.action])+', '+esc(PL[cl.priority].toLowerCase())+'</p>';
-    else if(cc.status==='low'||cc.status==='high')act='<p class="warn">No action selected yet.</p>';
-    return '<div class="srow" data-cond="'+(meta.v||'unset')+'">'+
-      '<div class="nm">'+esc(dn(Object.assign({__clear:true},cl)))+'</div>'+
-      '<div><span class="pill" data-v="'+meta.v+'">'+esc(meta.label)+'</span></div>'+
-      '<div><p>'+esc(calc)+'</p>'+(cl.notes.trim()?'<p>'+esc(cl.notes.trim())+'</p>':'')+act+'</div></div>';
-  }).join('');
-  var combinedHTML=rowsHTML+clRowsHTML;
-  $('#srows').innerHTML=combinedHTML?combinedHTML:((n||S.clearances.length)?'<p class="empty">Everything is hidden from the summary. Tick “Show in inspection summary” to bring items back.</p>':'<p class="empty">Components and clearance checks you add appear here with their condition, findings and actions.</p>');
   renderRecs(st);
   updateNav();
 }
@@ -1431,12 +1386,12 @@ function buildSummaryText(){
   L.push('');L.push(leadText(st));
   if(S.summary.overall)L.push('Overall condition: '+CL[S.summary.overall]);
   if(S.summary.narrative.trim()){L.push('');L.push(S.summary.narrative.trim())}
-  var rows=S.components.filter(function(c){return c.inSummary});
+  var rows=S.components;
   if(rows.length){L.push('');L.push('COMPONENTS');rows.forEach(function(c){
     L.push('- '+dn(c)+': '+CL[c.condition||'unset']+(c.notes.trim()?'. '+c.notes.trim().replace(/\s*\n\s*/g,' '):''));
     c.dims.filter(function(d){return d.flag||dimInRange(d)===false}).forEach(function(d){L.push('    Out of spec: '+(d.p||'measurement')+' '+(d.found||'-')+' '+d.unit+' (spec '+(specText(d)||'-')+')'+(d.built?' \u2014 as built: '+d.built+' '+d.unit:''))});
   })}
-  var clRows=S.clearances.filter(function(cl){return cl.inSummary});
+  var clRows=S.clearances;
   if(clRows.length){L.push('');L.push('FITS AND CLEARANCES');clRows.forEach(function(cl){
     var cc=computeClearance(cl),meta=statusMeta(cc.status);
     var calc=cc.status==='incomplete'?'Incomplete':('Result'+(S.phase==='built'?' (as built)':'')+' '+((cc.value>0?'+':cc.value<0?'':'')+cc.value)+(cl.unit?' '+cl.unit:''));
@@ -1474,17 +1429,6 @@ function buildReportHTML(){
     if(!photos||!photos.length)return '';
     return '<div class="pgridp">'+photos.map(function(ph){return '<img src="'+esc(ph.data)+'" alt="">'}).join('')+'</div>';
   }
-  var rowsS=S.components.filter(function(c){return c.inSummary}).map(function(c){
-    var fl=c.dims.filter(function(d){return d.flag||dimInRange(d)===false}).map(function(d){var v=d.specMin||d.specMax?'':varText(d);return '<div>Out of spec: '+esc(d.p||'measurement')+' '+esc(d.found||'–')+' '+esc(d.unit)+' (spec '+esc(specText(d)||'–')+(v&&v!=='–'?', var. '+v:'')+')'+(d.built?' \u2014 as built: '+esc(d.built)+' '+esc(d.unit):'')+'</div>'}).join('');
-    var a=c.action==='none'?'<div class="m">No action needed</div>':(c.action?'<div><b>Action:</b> '+esc(AL[c.action])+', '+esc(PL[c.priority].toLowerCase())+'</div>':'');
-    return '<tr><td><b>'+esc(dn(c))+'</b></td><td><span class="tag c-'+(c.condition||'unset')+'">'+esc(CL[c.condition||'unset'])+'</span></td><td>'+nl(c.notes)+fl+a+'</td></tr>';
-  }).join('');
-  rowsS+=S.clearances.filter(function(cl){return cl.inSummary}).map(function(cl){
-    var cc=computeClearance(cl),meta=statusMeta(cc.status);
-    var calc=cc.status==='incomplete'?'Incomplete':('Result'+(S.phase==='built'?' (as built)':'')+': '+((cc.value>0?'+':cc.value<0?'':'')+cc.value)+(cl.unit?' '+cl.unit:''));
-    var a=cl.action==='none'?'<div class="m">No action needed</div>':(cl.action?'<div><b>Action:</b> '+esc(AL[cl.action])+', '+esc(PL[cl.priority].toLowerCase())+'</div>':'');
-    return '<tr><td><b>'+esc(dn(Object.assign({__clear:true},cl)))+'</b></td><td><span class="tag c-'+(meta.v||'unset')+'">'+esc(meta.label)+'</span></td><td>'+esc(calc)+(cl.notes.trim()?'<div>'+nl(cl.notes)+'</div>':'')+a+'</td></tr>';
-  }).join('');
   var recHTML=PRIS.map(function(p){
     var it=st.recs.filter(function(c){return c.priority===p[0]});if(!it.length)return '';
     return '<h3>'+esc(p[1])+'</h3><ol>'+it.map(function(c){return '<li><b>'+esc(dn(c))+':</b> '+esc(AL[c.action])+(c.actionNotes.trim()?' — '+nl(c.actionNotes):'')+(c.actionMemo.trim()?'<div class="m">'+nl(c.actionMemo)+'</div>':'')+'</li>'}).join('')+'</ol>';
@@ -1503,18 +1447,39 @@ function buildReportHTML(){
       ):'')+
     '</section>';
   }).join('');
+  var clDetail=S.clearances.map(function(cl){
+    var ccF=computeClearance(cl,'found'),ccB=computeClearance(cl,'built');
+    var metaF=statusMeta(ccF.status),metaB=statusMeta(ccB.status);
+    var aComp=getC(cl.aComp),bComp=getC(cl.bComp);
+    var aLabel=aComp?(dn(aComp)+(ccF.a?' \u2014 '+(ccF.a.p||'measurement'):' \u2014 measurement not set')):'Not set';
+    var bLabel=bComp?(dn(bComp)+(ccF.b?' \u2014 '+(ccF.b.p||'measurement'):' \u2014 measurement not set')):'Not set';
+    var title=dn(Object.assign({__clear:true},cl));
+    var tolText=(cl.min!==''||cl.max!=='')?((cl.min!==''?cl.min:'\u2013')+' to '+(cl.max!==''?cl.max:'\u2013')):'Not set';
+    var hasBuilt=(ccF.a&&ccF.a.built)||(ccF.b&&ccF.b.built);
+    function resText(cc){return cc.status==='incomplete'?'\u2013':((cc.value>0?'+':cc.value<0?'':'')+cc.value)}
+    return '<section class="comp"><h3>'+esc(title)+' <span class="tag c-'+(metaF.v||'unset')+'">'+esc(metaF.label)+'</span>'+(hasBuilt?' <span class="tag c-'+(metaB.v||'unset')+'">As built: '+esc(metaB.label)+'</span>':'')+'</h3>'+
+      '<table><tr><th>Measurement</th><th>As found</th><th>As built</th><th>Tolerance</th><th>Unit</th></tr>'+
+      '<tr><td>'+esc(aLabel)+'</td><td>'+esc(ccF.a?ccF.a.found:'')+'</td><td>'+esc(ccF.a?ccF.a.built:'')+'</td><td></td><td>'+esc(ccF.a?ccF.a.unit:'')+'</td></tr>'+
+      '<tr><td>'+esc(bLabel)+'</td><td>'+esc(ccF.b?ccF.b.found:'')+'</td><td>'+esc(ccF.b?ccF.b.built:'')+'</td><td></td><td>'+esc(ccF.b?ccF.b.unit:'')+'</td></tr>'+
+      '<tr><td><b>Result</b></td><td>'+esc(resText(ccF))+'</td><td>'+(hasBuilt?esc(resText(ccB)):'')+'</td><td>'+esc(tolText)+'</td><td>'+esc(cl.unit||'')+'</td></tr>'+
+      '</table>'+
+      (cl.notes.trim()?'<p><b>Notes.</b> '+nl(cl.notes)+'</p>':'')+
+      '<p><b>Action.</b> '+(cl.action?esc(AL[cl.action])+(hasAct(cl)?', '+esc(PL[cl.priority].toLowerCase()):''):'Not set')+(cl.actionNotes.trim()?' \u2014 '+nl(cl.actionNotes):'')+(cl.actionMemo.trim()?' <i>('+nl(cl.actionMemo)+')</i>':'')+'</p>'+
+    '</section>';
+  }).join('');
   var css='body{font:14px/1.45 Arial,Helvetica,sans-serif;color:#111;margin:28px auto;max-width:920px;padding:0 20px}h1{font-size:26px;margin:0 0 2px}h2{font-size:17px;margin:26px 0 8px;padding-bottom:4px;border-bottom:2px solid #0F5E8C}h3{font-size:14px;margin:14px 0 6px}table{border-collapse:collapse;width:100%;margin:6px 0}th,td{border:1px solid #bbb;padding:5px 7px;text-align:left;vertical-align:top;font-size:13px}th{background:#eef2f5;font-weight:600}.kv th{width:17%}.kv td{width:33%}.m{color:#666}.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:700;background:#e3e8eb;color:#44525c}.c-good{background:#dcf0e3;color:#14532d}.c-fair{background:#f8eac4;color:#6b4a00}.c-poor{background:#fadcc8;color:#8a3200}.c-failed{background:#f7d5d3;color:#8a1414}.oos td{background:#fff4ec}.comp{break-inside:avoid;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #ddd}.pgridp{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.pgridp img{width:110px;height:110px;object-fit:cover;border:1px solid #bbb;border-radius:4px}.rhead{display:flex;align-items:center;gap:14px;margin-bottom:2px}.rlogo{width:60px;height:60px;object-fit:contain}.rfac{font-weight:700;font-size:16px}.rfacsub{color:#555;font-size:12px}@media print{body{margin:0}h2{break-after:avoid}tr{break-inside:avoid}}';
   return '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>'+esc(reportTitle())+(S.job.reportNo?' '+esc(S.job.reportNo):'')+'</title><style>'+css+'</style></head><body>'+
    (S.facility.logo||S.facility.name||S.facility.address||S.facility.phone||S.facility.email?'<div class="rhead">'+(S.facility.logo?'<img class="rlogo" src="'+esc(S.facility.logo)+'" alt="">':'')+'<div>'+(S.facility.name?'<div class="rfac">'+esc(S.facility.name)+'</div>':'')+(S.facility.address?'<div class="rfacsub">'+esc(S.facility.address)+'</div>':'')+([S.facility.phone,S.facility.fax,S.facility.email].filter(Boolean).length?'<div class="rfacsub">'+esc([S.facility.phone&&('Phone: '+S.facility.phone),S.facility.fax&&('Fax: '+S.facility.fax),S.facility.email].filter(Boolean).join(' · '))+'</div>':'')+'</div></div>':'')+
    '<h1>'+esc(reportTitle())+'</h1><p class="m">'+esc([S.job.reportNo&&'Report '+S.job.reportNo,S.job.inspected&&'Inspected '+S.job.inspected].filter(Boolean).join(' · '))+'</p>'+
    '<h2>Customer</h2>'+kv(custPairs)+'<h2>Job</h2>'+kv(jobPairs)+'<h2>Equipment</h2>'+kv(eqPairs)+
    '<h2>Pre-inspection</h2>'+kv([['Reported problem',S.pre.reported],['Operating conditions',S.pre.ops],['As-received condition and notes',S.pre.asReceived]])+photoGrid(S.pre.photos)+
+   (detail?'<h2>Components</h2>'+detail:'')+
+   (clDetail?'<h2>Fits and Clearances</h2>'+clDetail:'')+
    '<h2>Inspection summary</h2><p>'+esc(leadText(st))+(S.summary.overall?' <b>Overall condition: '+esc(CL[S.summary.overall])+'.</b>':'')+'</p>'+(S.summary.narrative.trim()?'<p>'+nl(S.summary.narrative)+'</p>':'')+
-   (rowsS?'<table><tr><th>Component</th><th>Condition</th><th>Findings and action</th></tr>'+rowsS+'</table>':'')+
    '<h2>Recommendations</h2>'+(S.recs.disposition?'<p><b>Disposition:</b> '+esc(S.recs.disposition)+'</p>':'')+recHTML+(S.recs.additional.trim()?'<h3>Additional recommendations</h3><p>'+nl(S.recs.additional)+'</p>':'')+
    (S.job.inspector||S.recs.reviewer?'<p style="margin-top:20px">'+(S.job.inspector?'Inspected by: <b>'+esc(S.job.inspector)+'</b>':'')+(S.recs.reviewer?' &nbsp; Reviewed by: <b>'+esc(S.recs.reviewer)+'</b>'+(S.recs.reviewDate?' ('+esc(S.recs.reviewDate)+')':''):'')+'</p>':'')+
    (S.history.length?'<h2>Revision history</h2><table><tr><th>Date</th><th>By</th><th>Change</th></tr>'+S.history.slice().reverse().map(function(x){return '<tr><td>'+esc(fmtDate(x.at))+'</td><td>'+esc(x.by)+'</td><td>'+nl(x.note)+'</td></tr>'}).join('')+'</table>':'')+
-   (detail?'<h2>Component detail</h2>'+detail:'')+'</body></html>';
+   '</body></html>';
 }
 
 /* ---------- Word (.docx) export ---------- */
