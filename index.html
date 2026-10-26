@@ -1416,7 +1416,7 @@ function buildReportHTML(){
     for(var i=0;i<pairs.length;i+=2){
       var a=pairs[i],b=pairs[i+1];
       if(!a[1]&&!(b&&b[1]))continue;
-      rows+='<tr><th>'+esc(a[0])+'</th><td>'+esc(a[1])+'</td>'+(b?'<th>'+esc(b[0])+'</th><td>'+esc(b[1])+'</td>':'<th></th><td></td>')+'</tr>';
+      rows+='<tr><th>'+esc(a[0])+'</th><td>'+nl(a[1])+'</td>'+(b?'<th>'+esc(b[0])+'</th><td>'+nl(b[1])+'</td>':'<th></th><td></td>')+'</tr>';
     }
     if(!rows)return '<p class="m">Nothing recorded.</p>';
     return '<table class="kv">'+rows+'</table>';
@@ -1509,15 +1509,19 @@ function buildDocxBlob(){
     var children=[];
 
     function h(text,lvl){children.push(new P({heading:lvl,spacing:{before:240,after:100},keepNext:true,children:[new T({text:text})]}))}
+    function lineRuns(text,runOpts){
+      var lines=String(text==null?'':text).split('\n');
+      return lines.map(function(line,i){return new T(Object.assign({text:line},runOpts,{break:i<lines.length-1?1:undefined}))});
+    }
     function para(text,opts){
       opts=opts||{};
       var keepNext=!!opts.keepNext;
       var tOpts=Object.assign({},opts);delete tOpts.keepNext;
-      children.push(new P({spacing:{after:80},keepNext:keepNext,children:[new T(Object.assign({text:text||''},tOpts))]}));
+      children.push(new P({spacing:{after:80},keepNext:keepNext,children:lineRuns(text||'',tOpts)}));
     }
     function trw(opts){opts=opts||{};opts.cantSplit=true;return new TRW(opts)}
     function noBorders(){var e={style:BS.NONE,size:0,color:'FFFFFF'};return{top:e,bottom:e,left:e,right:e}}
-    function cell(text,opts){opts=opts||{};return new TCL({width:{size:opts.w||25,type:WT.PERCENTAGE},shading:opts.shade?{fill:opts.shade,type:SH.CLEAR}:undefined,borders:opts.plain?noBorders():undefined,children:[new P({children:[new T({text:String(text==null?'':text),bold:!!opts.bold,size:opts.size||18,color:opts.color})]})]})}
+    function cell(text,opts){opts=opts||{};return new TCL({width:{size:opts.w||25,type:WT.PERCENTAGE},shading:opts.shade?{fill:opts.shade,type:SH.CLEAR}:undefined,borders:opts.plain?noBorders():undefined,children:[new P({children:lineRuns(text,{bold:!!opts.bold,size:opts.size||18,color:opts.color})})]})}
     function kvTable(pairs){
       if(!pairs.some(function(p){return p[1]})){para('Nothing recorded.',{italics:true,color:'666666'});return}
       var rows=[];
