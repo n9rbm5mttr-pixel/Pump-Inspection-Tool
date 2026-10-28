@@ -1687,10 +1687,13 @@ function copyText(t){
 }
 function printReport(){
   try{
-    var f=document.createElement('iframe');
-    f.setAttribute('aria-hidden','true');f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0';
-    f.onload=function(){try{f.contentWindow.focus();f.contentWindow.print()}catch(e){toast('Printing isn’t available here. Use Save report and print the file.')}setTimeout(function(){f.remove()},60000)};
-    f.srcdoc=buildReportHTML();document.body.appendChild(f);
+    var w=window.open('','_blank');
+    if(!w){toast('Pop-up blocked \u2014 allow pop-ups for this site, then try Print again.');return}
+    w.document.open();w.document.write(buildReportHTML());w.document.close();
+    function go(){try{w.focus();w.print()}catch(e){}}
+    try{w.addEventListener('afterprint',function(){try{w.close()}catch(e){}})}catch(e){}
+    if(w.document.readyState==='complete')setTimeout(go,250);
+    else w.addEventListener('load',function(){setTimeout(go,250)});
   }catch(e){toast('Printing isn’t available here. Use Save report and print the file.')}
 }
 
