@@ -1431,7 +1431,7 @@ function buildReportHTML(){
   }
   var recHTML=PRIS.map(function(p){
     var it=st.recs.filter(function(c){return c.priority===p[0]});if(!it.length)return '';
-    return '<h3>'+esc(p[1])+'</h3><ol>'+it.map(function(c){return '<li><b>'+esc(dn(c))+':</b> '+esc(AL[c.action])+(c.actionNotes.trim()?' — '+nl(c.actionNotes):'')+(c.actionMemo.trim()?'<div class="m">'+nl(c.actionMemo)+'</div>':'')+'</li>'}).join('')+'</ol>';
+    return '<div class="keep"><h3>'+esc(p[1])+'</h3><ol>'+it.map(function(c){return '<li><b>'+esc(dn(c))+':</b> '+esc(AL[c.action])+(c.actionNotes.trim()?' — '+nl(c.actionNotes):'')+(c.actionMemo.trim()?'<div class="m">'+nl(c.actionMemo)+'</div>':'')+'</li>'}).join('')+'</ol></div>';
   }).join('')||'<p class="m">No recommended actions recorded.</p>';
   var detail=S.components.map(function(c){
     var dims=c.dims.filter(function(d){return d.found||d.built||d.spec});
@@ -1477,7 +1477,7 @@ function buildReportHTML(){
    '<div class="keep"><h2>Pre-inspection</h2>'+kv([['Reported problem',S.pre.reported],['Operating conditions',S.pre.ops],['As-received condition and notes',S.pre.asReceived]])+photoGrid(S.pre.photos)+'</div>'+
    (detail?'<h2>Components</h2>'+detail:'')+
    (clDetail?'<h2>Fits and Clearances</h2>'+clDetail:'')+
-   '<h2>Inspection summary</h2><p>'+esc(leadText(st))+(S.summary.overall?' <b>Overall condition: '+esc(CL[S.summary.overall])+'.</b>':'')+'</p>'+(S.summary.narrative.trim()?'<p>'+nl(S.summary.narrative)+'</p>':'')+
+   '<div class="keep"><h2>Inspection summary</h2><p>'+esc(leadText(st))+(S.summary.overall?' <b>Overall condition: '+esc(CL[S.summary.overall])+'.</b>':'')+'</p>'+(S.summary.narrative.trim()?'<p>'+nl(S.summary.narrative)+'</p>':'')+'</div>'+
    '<h2>Recommendations</h2>'+(S.recs.disposition?'<p><b>Disposition:</b> '+esc(S.recs.disposition)+'</p>':'')+recHTML+(S.recs.additional.trim()?'<h3>Additional recommendations</h3><p>'+nl(S.recs.additional)+'</p>':'')+
    (S.job.inspector||S.recs.reviewer?'<p style="margin-top:20px">'+(S.job.inspector?'Inspected by: <b>'+esc(S.job.inspector)+'</b>':'')+(S.recs.reviewer?' &nbsp; Reviewed by: <b>'+esc(S.recs.reviewer)+'</b>'+(S.recs.reviewDate?' ('+esc(S.recs.reviewDate)+')':''):'')+'</p>':'')+
    (S.history.length?'<h2>Revision history</h2><table><tr><th>Date</th><th>By</th><th>Change</th></tr>'+S.history.slice().reverse().map(function(x){return '<tr><td>'+esc(fmtDate(x.at))+'</td><td>'+esc(x.by)+'</td><td>'+nl(x.note)+'</td></tr>'}).join('')+'</table>':'')+
