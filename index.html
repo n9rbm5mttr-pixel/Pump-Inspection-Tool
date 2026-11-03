@@ -574,7 +574,7 @@ aodd:['diaphragm','pdvalves','orings'],
 recip:['plunger','pdvalves','packing','shaft','bearing','housing','gearbox','motor','relief','lube'],
 screw:['screws','casing','shaft','bearing','mechseal','coupling','gearbox','motor','relief','orings']
 };
-var JOB=[['job.reportNo','Report #'],['job.po','PO / work order #'],['job.inspected','Inspection date','date'],['job.inspector','Inspected by'],['job.repairedDate','Repaired date','date'],['job.repairTechnician','Repaired by'],['job.binLocation','Bin Location']];
+var JOB=[['job.reportNo','Job #'],['job.po','PO #'],['job.inspected','Inspection date','date'],['job.inspector','Inspected by'],['job.repairedDate','Repaired date','date'],['job.repairTechnician','Repaired by'],['job.binLocation','Bin Location']];
 var CUST=[['customer.company','Company'],['customer.contact','Contact'],['customer.phone','Phone','tel'],['customer.email','Email','email'],['customer.address','Site / address','text','span2']];
 var FACILITY=[['facility.name','Facility name'],['facility.address','Address','text','span2'],['facility.phone','Phone','tel'],['facility.fax','Fax','tel'],['facility.email','Email','email']];
 var EQ=[['equipment.tag','Tag / asset ID'],['equipment.manufacturer','Manufacturer'],['equipment.model','Model'],['equipment.serial','Serial #'],['equipment.year','Year built'],['equipment.size','Size / stages'],['equipment.flow','Rated flow'],['equipment.head','Rated head / pressure'],['equipment.rpm','Speed (rpm)'],['equipment.power','Driver power'],['equipment.service','Service / fluid pumped'],['equipment.materials','Materials of construction'],['equipment.seal','Seal / packing arrangement'],['equipment.location','Location / unit']];
@@ -1470,7 +1470,7 @@ function buildReportHTML(){
   var css='body{font:14px/1.45 Arial,Helvetica,sans-serif;color:#111;margin:28px auto;max-width:920px;padding:0 20px}h1{font-size:26px;margin:0 0 2px}h2{font-size:17px;margin:26px 0 8px;padding-bottom:4px;border-bottom:2px solid #0F5E8C}h3{font-size:14px;margin:14px 0 6px}table{border-collapse:collapse;width:100%;margin:6px 0}th,td{border:1px solid #bbb;padding:5px 7px;text-align:left;vertical-align:top;font-size:13px}th{background:#eef2f5;font-weight:600}.kv th{width:17%}.kv td{width:33%}.m{color:#666}.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;font-weight:700;background:#e3e8eb;color:#44525c}.c-good{background:#dcf0e3;color:#14532d}.c-fair{background:#f8eac4;color:#6b4a00}.c-poor{background:#fadcc8;color:#8a3200}.c-failed{background:#f7d5d3;color:#8a1414}.oos td{background:#fff4ec}.comp{break-inside:avoid;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #ddd}.keep{break-inside:avoid}.pgridp{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.pgridp img{width:110px;height:110px;object-fit:cover;border:1px solid #bbb;border-radius:4px}.rhead{margin-bottom:12px}.rlogo{display:block;width:220px;height:50px;object-fit:contain;margin-bottom:6px}.rfac{font-weight:700;font-size:16px}.rfacsub{color:#555;font-size:12px}@media print{@page{margin:0.3in}body{margin:0;padding:0;max-width:none}h2{break-after:avoid}h3{break-after:avoid}tr{break-inside:avoid}}';
   return '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>'+esc(fileBaseName(S.phase==='built'?'as built report':'inspection report'))+'</title><style>'+css+'</style></head><body>'+
    (S.facility.logo||S.facility.name||S.facility.address||S.facility.phone||S.facility.email?'<div class="rhead">'+(S.facility.logo?'<img class="rlogo" src="'+esc(S.facility.logo)+'" alt="">':'')+(S.facility.name?'<div class="rfac">'+esc(S.facility.name)+'</div>':'')+(S.facility.address?'<div class="rfacsub">'+esc(S.facility.address)+'</div>':'')+([S.facility.phone,S.facility.fax,S.facility.email].filter(Boolean).length?'<div class="rfacsub">'+esc([S.facility.phone&&('Phone: '+S.facility.phone),S.facility.fax&&('Fax: '+S.facility.fax),S.facility.email].filter(Boolean).join(' · '))+'</div>':'')+'</div>':'')+
-   '<h1>'+esc(reportTitle())+'</h1><p class="m">'+esc([S.job.reportNo&&'Report '+S.job.reportNo,S.job.inspected&&'Inspected '+S.job.inspected].filter(Boolean).join(' · '))+'</p>'+
+   '<h1>'+esc(reportTitle())+'</h1><p class="m">'+esc([S.job.reportNo&&'Job '+S.job.reportNo,S.job.inspected&&'Inspected '+S.job.inspected].filter(Boolean).join(' · '))+'</p>'+
    '<div class="keep"><h2>Customer</h2>'+kv(custPairs)+'</div>'+
    '<div class="keep"><h2>Job</h2>'+kv(jobPairs)+'</div>'+
    '<div class="keep"><h2>Equipment</h2>'+kv(eqPairs)+'</div>'+
@@ -1561,7 +1561,7 @@ function buildDocxBlob(){
       if(facLine)para(facLine,{size:16,color:'555555'});
     }
     h(reportTitle(),HL.TITLE);
-    para([S.job.reportNo&&'Report '+S.job.reportNo,S.job.inspected&&'Inspected '+S.job.inspected].filter(Boolean).join('   \u00b7   '),{color:'666666',size:18});
+    para([S.job.reportNo&&'Job '+S.job.reportNo,S.job.inspected&&'Inspected '+S.job.inspected].filter(Boolean).join('   \u00b7   '),{color:'666666',size:18});
 
     h('Customer',HL.HEADING_1);kvTable(CUST.map(function(f){return[f[1],getPath(S,f[0])]}));
     h('Job',HL.HEADING_1);kvTable(JOB.map(function(f){return[f[1],getPath(S,f[0])]}));
