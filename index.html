@@ -467,6 +467,8 @@ tr.clmore[data-hasact="0"] .act-only{display:none}
           <select id="rec-disp" data-bind="recs.disposition"><option value="">Not set</option><option>Return to service as found</option><option>Return to service after recommended repairs</option><option>Repair not economical, replace unit</option><option>Further evaluation required</option></select></div>
       </div>
       <div id="rgroups"></div>
+      <div id="builtActs"></div>
+      <div class="f" id="builtNotesF" style="margin-top:18px" hidden><label for="sum-built">As built notes</label><textarea id="sum-built" rows="4" data-bind="summary.builtNotes" placeholder="What was done, final measurements worth calling out, anything the customer should know about the rebuilt unit."></textarea></div>
       <div class="grid" style="margin-top:20px">
         <div class="f full"><label for="rec-add">Additional recommendations</label><textarea id="rec-add" rows="4" data-bind="recs.additional" placeholder="Operating changes, system issues, spares to stock, follow-up inspection interval…"></textarea></div>
       </div>
@@ -741,6 +743,7 @@ function clearName(cl){var a=getC(cl.aComp),b=getC(cl.bComp);return (a?dn(a):'Co
 function isRec(c){return c.inRecs&&c.action&&c.action!=='none'}
 function hasAct(c){return c.action&&c.action!=='none'}
 function hasActBuilt(c){return !!c.actionBuilt}
+function builtActList(){return S.phase==='built'?S.components.filter(function(c){return c.actionBuilt}):[]}
 function parseNum(s){var v=parseFloat(String(s).trim().replace(',','.'));return isNaN(v)?null:v}
 function dimRangeOk(val,mn,mx){
   var v=parseNum(val);if(v==null)return null;
@@ -793,7 +796,7 @@ function fresh(){return{
   equipment:{type:'',typeOther:'',orientation:'',rotation:'',tag:'',manufacturer:'',model:'',serial:'',year:'',size:'',flow:'',head:'',rpm:'',power:'',service:'',materials:'',seal:'',location:''},
   pre:{reported:'',ops:'',asReceived:'',photos:[]},
   components:[],
-  summary:{overall:'',narrative:''},
+  summary:{overall:'',narrative:'',builtNotes:''},
   recs:{disposition:'',additional:'',reviewer:'',reviewDate:''},
   history:[],
   clearances:[]
@@ -857,6 +860,7 @@ function updateTitleUI(){
   $('#mainTitle').textContent=reportTitle();
   document.title=reportTitle();
   $$('#phaseToggle input').forEach(function(r){r.checked=(r.value===S.phase)});
+  $('#builtNotesF').hidden=(S.phase!=='built');
 }
 function setPhase(p){
   if(p!=='found'&&p!=='built')return;
@@ -1371,6 +1375,10 @@ function renderRecs(st){
         (basis?'<p class="basis">Finding: '+esc(basis)+'</p>':'')+'</li>';
     }).join('')+'</ul></div>';
   }).join(''):'<p class="empty">Set an action on a component and it appears here, grouped by priority.</p>';
+  var ba=builtActList();
+  $('#builtActs').innerHTML=ba.length?'<div class="rgrp" data-p="built"><h3>As built actions<span class="n">'+ba.length+'</span></h3><ul class="rlist">'+ba.map(function(c){
+    return '<li><div><span class="rt">'+esc(dn(c))+'</span>: <span class="ra">'+esc(AL_BUILT[c.actionBuilt])+'</span></div>'+(c.actionMemoBuilt.trim()?'<p>'+esc(c.actionMemoBuilt.trim())+'</p>':'')+'</li>';
+  }).join('')+'</ul></div>':'';
 }
 
 /* ---------- text + html export ---------- */
@@ -1433,6 +1441,9 @@ function buildReportHTML(){
     var it=st.recs.filter(function(c){return c.priority===p[0]});if(!it.length)return '';
     return '<div class="keep"><h3>'+esc(p[1])+'</h3><ol>'+it.map(function(c){return '<li><b>'+esc(dn(c))+':</b> '+esc(AL[c.action])+(c.actionNotes.trim()?' — '+nl(c.actionNotes):'')+(c.actionMemo.trim()?'<div class="m">'+nl(c.actionMemo)+'</div>':'')+'</li>'}).join('')+'</ol></div>';
   }).join('')||'<p class="m">No recommended actions recorded.</p>';
+  var builtActs=builtActList();
+  var builtHTML=builtActs.length?'<div class="keep"><h3>As built actions</h3><ol>'+builtActs.map(function(c){return '<li><b>'+esc(dn(c))+':</b> '+esc(AL_BUILT[c.actionBuilt])+(c.actionMemoBuilt.trim()?' \u2014 '+nl(c.actionMemoBuilt):'')+'</li>'}).join('')+'</ol></div>':'';
+  var builtNotesHTML=(S.phase==='built'&&(S.summary.builtNotes||'').trim())?'<div class="keep"><h3>As built notes</h3><p>'+nl(S.summary.builtNotes)+'</p></div>':'';
   var detail=S.components.map(function(c){
     var dims=c.dims.filter(function(d){return d.found||d.built||d.spec});
     return '<section class="comp"><h3>'+esc(dn(c))+' <span class="tag c-'+(c.condition||'unset')+'">'+esc(CL[c.condition||'unset'])+'</span></h3>'+
@@ -1478,7 +1489,7 @@ function buildReportHTML(){
    (detail?'<h2>Components</h2>'+detail:'')+
    (clDetail?'<h2>Fits and Clearances</h2>'+clDetail:'')+
    '<div class="keep"><h2>Inspection summary</h2><p>'+esc(leadText(st))+(S.summary.overall?' <b>Overall condition: '+esc(CL[S.summary.overall])+'.</b>':'')+'</p>'+(S.summary.narrative.trim()?'<p>'+nl(S.summary.narrative)+'</p>':'')+'</div>'+
-   '<h2>Recommendations</h2>'+(S.recs.disposition?'<p><b>Disposition:</b> '+esc(S.recs.disposition)+'</p>':'')+recHTML+(S.recs.additional.trim()?'<h3>Additional recommendations</h3><p>'+nl(S.recs.additional)+'</p>':'')+
+   '<h2>Recommendations</h2>'+(S.recs.disposition?'<p><b>Disposition:</b> '+esc(S.recs.disposition)+'</p>':'')+recHTML+(S.recs.additional.trim()?'<h3>Additional recommendations</h3><p>'+nl(S.recs.additional)+'</p>':'')+builtHTML+builtNotesHTML+
    (S.job.inspector||S.recs.reviewer?'<p style="margin-top:20px">'+(S.job.inspector?'Inspected by: <b>'+esc(S.job.inspector)+'</b>':'')+(S.recs.reviewer?' &nbsp; Reviewed by: <b>'+esc(S.recs.reviewer)+'</b>'+(S.recs.reviewDate?' ('+esc(S.recs.reviewDate)+')':''):'')+'</p>':'')+
    (S.history.length?'<h2>Revision history</h2><table><tr><th>Date</th><th>By</th><th>Change</th></tr>'+S.history.slice().reverse().map(function(x){return '<tr><td>'+esc(fmtDate(x.at))+'</td><td>'+esc(x.by)+'</td><td>'+nl(x.note)+'</td></tr>'}).join('')+'</table>':'')+
    '</body></html>';
@@ -1641,6 +1652,12 @@ function buildDocxBlob(){
       });
     });
     if(S.recs.additional.trim()){h('Additional recommendations',HL.HEADING_2);para(S.recs.additional.trim())}
+    var bActs=builtActList();
+    if(bActs.length){
+      h('As built actions',HL.HEADING_2);
+      bActs.forEach(function(c){para('\u2022 '+dn(c)+': '+AL_BUILT[c.actionBuilt]+(c.actionMemoBuilt.trim()?' \u2014 '+c.actionMemoBuilt.trim():''))});
+    }
+    if(S.phase==='built'&&(S.summary.builtNotes||'').trim()){h('As built notes',HL.HEADING_2);para(S.summary.builtNotes.trim())}
     if(S.job.inspector||S.recs.reviewer){
       para((S.job.inspector?'Inspected by: '+S.job.inspector+'   ':'')+(S.recs.reviewer?'Reviewed by: '+S.recs.reviewer+(S.recs.reviewDate?' ('+S.recs.reviewDate+')':''):''),{bold:true});
     }
