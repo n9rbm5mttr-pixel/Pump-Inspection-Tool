@@ -468,7 +468,11 @@ tr.clmore[data-hasact="0"] .act-only{display:none}
       </div>
       <div id="rgroups"></div>
       <div id="builtActs"></div>
-      <div class="f" id="builtNotesF" style="margin-top:18px" hidden><label for="sum-built">As built notes</label><textarea id="sum-built" rows="4" data-bind="summary.builtNotes" placeholder="What was done, final measurements worth calling out, anything the customer should know about the rebuilt unit."></textarea></div>
+      <div id="builtNotesF" style="margin-top:18px" hidden>
+        <div class="f"><label for="sum-built">As built notes</label><textarea id="sum-built" rows="4" data-bind="summary.builtNotes" placeholder="What was done, final measurements worth calling out, anything the customer should know about the rebuilt unit."></textarea></div>
+        <div class="pgrid" id="builtPhotos"></div>
+        <label class="ghost sm">Add as built photos<input type="file" accept="image/*" multiple data-photofor="summary" hidden></label>
+      </div>
       <div class="grid" style="margin-top:20px">
         <div class="f full"><label for="rec-add">Additional recommendations</label><textarea id="rec-add" rows="4" data-bind="recs.additional" placeholder="Operating changes, system issues, spares to stock, follow-up inspection interval…"></textarea></div>
       </div>
@@ -796,7 +800,7 @@ function fresh(){return{
   equipment:{type:'',typeOther:'',orientation:'',rotation:'',tag:'',manufacturer:'',model:'',serial:'',year:'',size:'',stages:'',flow:'',head:'',rpm:'',trim:'',power:'',service:'',materials:'',seal:'',lubrication:'',location:''},
   pre:{reported:'',ops:'',asReceived:'',photos:[]},
   components:[],
-  summary:{overall:'',narrative:'',builtNotes:''},
+  summary:{overall:'',narrative:'',builtNotes:'',builtPhotos:[]},
   recs:{disposition:'',additional:'',reviewer:'',reviewDate:''},
   history:[],
   clearances:[]
@@ -834,6 +838,7 @@ function merge(data){
     if(S.pre.asReceived.indexOf(legacyNotes)===-1)S.pre.asReceived=(S.pre.asReceived?S.pre.asReceived+'\n\n':'')+legacyNotes;
   }
   S.pre.photos=S.pre.photos.map(normPhoto).filter(function(ph){return ph.data});
+  S.summary.builtPhotos=(Array.isArray(S.summary.builtPhotos)?S.summary.builtPhotos:[]).map(normPhoto).filter(function(ph){return ph.data});
   S.components=(Array.isArray(data.components)?data.components:[]).map(normComp);
   S.history=(Array.isArray(data.history)?data.history:[]).filter(function(x){return x&&typeof x==='object'}).map(function(x){return{by:String(x.by||''),at:String(x.at||''),note:String(x.note||'')}});
   S.clearances=(Array.isArray(data.clearances)?data.clearances:[]).map(normClearance);
@@ -959,6 +964,9 @@ function loadImageResized(file,maxDim,format,quality){
 function photoThumbHTML(kind,ownerId,i,ph){
   return '<div class="pthumb"><a href="'+ph.data+'" target="_blank" rel="noopener"><img src="'+ph.data+'" alt=""></a><button type="button" class="prm" data-rmphoto="'+kind+':'+ownerId+':'+i+'" aria-label="Remove photo">\u00d7</button></div>';
 }
+function renderBuiltPhotos(){
+  $('#builtPhotos').innerHTML=S.summary.builtPhotos.map(function(ph,i){return photoThumbHTML('sumbuilt','',i,ph)}).join('');
+}
 function renderPrePhotos(){
   $('#prePhotos').innerHTML=S.pre.photos.map(function(ph,i){return photoThumbHTML('pre','',i,ph)}).join('');
 }
@@ -972,10 +980,12 @@ function handlePhotoFiles(el){
       if(!r)return;added++;
       var ph=normPhoto({data:r.data,w:r.w,h:r.h});
       if(owner==='pre')S.pre.photos.push(ph);
+      else if(owner==='summary')S.summary.builtPhotos.push(ph);
       else if(builtId){var cb=getC(builtId);if(cb)cb.photosBuilt.push(ph)}
       else{var c=getC(owner);if(c)c.photos.push(ph)}
     });
     if(owner==='pre')renderPrePhotos();
+    else if(owner==='summary')renderBuiltPhotos();
     else{var c2=getC(builtId||owner);if(c2)replaceCard(c2.id)}
     if(added){toast(added+' photo'+(added===1?'':'s')+' added');scheduleSave()}
     else toast('Couldn\u2019t read those images.');
@@ -1443,7 +1453,8 @@ function buildReportHTML(){
   }).join('')||'<p class="m">No recommended actions recorded.</p>';
   var builtActs=builtActList();
   var builtHTML=builtActs.length?'<div class="keep"><h3>As built actions</h3><ol>'+builtActs.map(function(c){return '<li><b>'+esc(dn(c))+':</b> '+esc(AL_BUILT[c.actionBuilt])+(c.actionMemoBuilt.trim()?' \u2014 '+nl(c.actionMemoBuilt):'')+'</li>'}).join('')+'</ol></div>':'';
-  var builtNotesHTML=(S.phase==='built'&&(S.summary.builtNotes||'').trim())?'<div class="keep"><h3>As built notes</h3><p>'+nl(S.summary.builtNotes)+'</p></div>':'';
+  var bPhotos=S.phase==='built'?(S.summary.builtPhotos||[]):[];
+  var builtNotesHTML=(S.phase==='built'&&((S.summary.builtNotes||'').trim()||bPhotos.length))?'<div class="keep"><h3>As built notes</h3>'+((S.summary.builtNotes||'').trim()?'<p>'+nl(S.summary.builtNotes)+'</p>':'')+photoGrid(bPhotos)+'</div>':'';
   var detail=S.components.map(function(c){
     var dims=c.dims.filter(function(d){return d.found||d.built||d.spec});
     return '<section class="comp"><h3>'+esc(dn(c))+' <span class="tag c-'+(c.condition||'unset')+'">'+esc(CL[c.condition||'unset'])+'</span></h3>'+
@@ -1657,7 +1668,12 @@ function buildDocxBlob(){
       h('As built actions',HL.HEADING_2);
       bActs.forEach(function(c){para('\u2022 '+dn(c)+': '+AL_BUILT[c.actionBuilt]+(c.actionMemoBuilt.trim()?' \u2014 '+c.actionMemoBuilt.trim():''))});
     }
-    if(S.phase==='built'&&(S.summary.builtNotes||'').trim()){h('As built notes',HL.HEADING_2);para(S.summary.builtNotes.trim())}
+    var bPh=S.phase==='built'?(S.summary.builtPhotos||[]):[];
+    if(S.phase==='built'&&((S.summary.builtNotes||'').trim()||bPh.length)){
+      h('As built notes',HL.HEADING_2);
+      if((S.summary.builtNotes||'').trim())para(S.summary.builtNotes.trim());
+      photosPara(bPh);
+    }
     if(S.job.inspector||S.recs.reviewer){
       para((S.job.inspector?'Inspected by: '+S.job.inspector+'   ':'')+(S.recs.reviewer?'Reviewed by: '+S.recs.reviewer+(S.recs.reviewDate?' ('+S.recs.reviewDate+')':''):''),{bold:true});
     }
@@ -1890,6 +1906,7 @@ document.addEventListener('click',function(e){
   if(d.rmphoto){
     var pp=d.rmphoto.split(':'),kind=pp[0],owner=pp[1],idx=+pp[2];
     if(kind==='pre'){S.pre.photos.splice(idx,1);renderPrePhotos()}
+    else if(kind==='sumbuilt'){S.summary.builtPhotos.splice(idx,1);renderBuiltPhotos()}
     else if(kind==='built'){var cb2=getC(owner);if(cb2){cb2.photosBuilt.splice(idx,1);replaceCard(cb2.id)}}
     else{var cp=getC(owner);if(cp){cp.photos.splice(idx,1);replaceCard(cp.id)}}
     scheduleSave();return;
@@ -2052,7 +2069,7 @@ window.addEventListener('scroll',trackTabs,{passive:true});
 
 /* ---------- init ---------- */
 function renderAll(){
-  renderForms();hydrate();renderCards();renderClearances();renderSummary();updateTypical();updateEqOther();trackTabs();renderHistory();refreshStatus();renderLogo();renderPrePhotos();
+  renderForms();hydrate();renderCards();renderClearances();renderSummary();updateTypical();updateEqOther();trackTabs();renderHistory();refreshStatus();renderLogo();renderPrePhotos();renderBuiltPhotos();
   setFacilityLocked(facilityLocked);
   updateTitleUI();
 }
